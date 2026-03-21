@@ -69,13 +69,15 @@ const QuestionPaperGenerator = () => {
     <div 
       className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 font-sans text-gray-200"
       style={{
-        backgroundColor: '#050505',
-        backgroundImage: 'linear-gradient(to right, #1a1a1a 1px, transparent 1px), linear-gradient(to bottom, #1a1a1a 1px, transparent 1px)',
-        backgroundSize: '12px 12px'
+        backgroundColor: '#000000',
+        backgroundImage: `
+          radial-gradient(circle at 50% 0%, rgba(50, 0, 0, 0.2) 0%, transparent 60%),
+          url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.08'/%3E%3C/svg%3E")
+        `
       }}
     >
       {/* Main Glass Card */}
-      <div className="max-w-4xl mx-auto bg-black/60 backdrop-blur-xl rounded-xl shadow-2xl shadow-red-900/20 border border-gray-800 overflow-hidden">
+      <div className="max-w-4xl mx-auto bg-black/60 backdrop-blur-xl rounded-3xl shadow-2xl shadow-red-900/20 border border-gray-800 overflow-hidden">
         
         {/* Header */}
         <div className="bg-gradient-to-r from-red-950 via-red-900 to-black px-6 py-4 border-b border-red-800/50">
@@ -196,7 +198,7 @@ const QuestionPaperGenerator = () => {
               </h2>
               <div className="text-red-400 mt-4 space-y-2 text-center text-sm font-mono bg-red-950/30 p-4 rounded-md border border-red-900/30">
                 <p className="animate-pulse"> Extracting & Cleaning Content...</p>
-                <p className="animate-pulse delay-75"> Analyzing Context via Gemini...</p>
+                <p className="animate-pulse delay-75"> Analyzing Context via AI...</p>
                 <p className="animate-pulse delay-150"> Formatting Output...</p>
               </div>
             </div>
