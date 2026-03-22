@@ -1,30 +1,35 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './Login';
-import Home from './Home'; // <-- Now importing Home
+import Home from './Home';
+
+// 1. Create a wrapper component that checks auth dynamically
+const ProtectedRoute = ({ children }) => {
+  // This now runs EVERY time someone tries to access a protected route
+  const isAuth = !!localStorage.getItem('token'); 
+  return isAuth ? children : <Navigate to="/login" replace />;
+};
 
 const App = () => {
-  // Check if user is logged in (your seniors will likely set a token in localStorage)
-  const isAuthenticated = !!localStorage.getItem('token'); 
-
   return (
     <Router>
       <Routes>
-        {/* Route 1: The Login Page */}
         <Route path="/login" element={<Login />} />
 
-        {/* Route 2: The Main Application (Protected) */}
+        {/* 2. Wrap the Home component inside the ProtectedRoute */}
         <Route 
           path="/home" 
           element={
-            isAuthenticated ? <Home /> : <Navigate to="/login" replace />
+            <ProtectedRoute>
+              <Home />
+            </ProtectedRoute>
           } 
         />
 
-        {/* Default Route: Redirect to Home if logged in, else login */}
+        {/* Default Route */}
         <Route 
           path="*" 
-          element={<Navigate to={isAuthenticated ? "/home" : "/login"} replace />} 
+          element={<Navigate to="/login" replace />} 
         />
       </Routes>
     </Router>
