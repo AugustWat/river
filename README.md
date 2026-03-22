@@ -1,19 +1,60 @@
-# river
-Exon
+# StudyAlly (Vite + React + In-App API)
 
-# React + Vite
+This app serves both UI and API from the same deployment.
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+- UI example: `/`
+- API example: `/api/quiz/generate`
 
-Currently, two official plugins are available:
+## Implemented API
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+### `POST /api/quiz/generate`
 
-## React Compiler
+Request body (JSON):
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+```json
+{
+	"subject": "Data Structures",
+	"questionCount": 10,
+	"instructions": "Focus on stack and queue problems"
+}
+```
 
-## Expanding the ESLint configuration
+Response body:
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+```json
+{
+	"questions": [
+		{
+			"question": "...",
+			"options": ["...", "...", "...", "..."],
+			"correctAnswer": 2
+		}
+	]
+}
+```
+
+## Environment variables
+
+Set these in `.env`:
+
+```dotenv
+AI_PROVIDER=gemini
+GEMINI_API_KEY=your_key_here
+# Optional
+GEMINI_MODEL=gemini-1.5-flash
+VITE_API_BASE_URL=/api/quiz
+```
+
+## Local development
+
+For frontend-only dev:
+
+```bash
+npm run dev
+```
+
+For unified UI + `/api/*` behavior locally (same host semantics), run with Vercel CLI:
+
+```bash
+npx vercel dev
+```

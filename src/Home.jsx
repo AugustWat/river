@@ -5,7 +5,6 @@ import { AuroraText } from "./AuroraText";
 import Footer from "./Footer";
 
 // 🟢 BACKEND SENIORS: Set your API base URL here
-const API_BASE_URL = "http://localhost:5000/api"; 
 
 const Home = () => {
   const [appState, setAppState] = useState("input");

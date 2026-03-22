@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import MagicCard from './MagicCard';
 
 // 🟢 BACKEND SENIORS: Set your API base URL here
-const API_BASE_URL = "http://localhost:5000/api/quiz"; 
+const API_BASE_URL = '/api/quiz';
 
 const PracticeQuiz = ({ formData, onBackToMenu }) => {
   const [quizState, setQuizState] = useState('setup'); // setup, processing, active, results, dashboard_loading, dashboard, error
@@ -24,33 +24,26 @@ const PracticeQuiz = ({ formData, onBackToMenu }) => {
     setError(null);
 
     try {
-      /* 🟢 UNCOMMENT THIS FOR REAL API CALL
-      const submitData = new FormData();
-      submitData.append("subject", subjectName);
-      submitData.append("questionCount", selectedCount);
-      if (formData?.syllabus) submitData.append("syllabus", formData.syllabus);
-      if (formData?.extraInstructions) submitData.append("instructions", formData.extraInstructions);
-
       const response = await fetch(`${API_BASE_URL}/generate`, {
-        method: "POST",
-        body: submitData, 
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          subject: subjectName,
+          questionCount: selectedCount,
+          instructions: formData?.extraInstructions || '',
+        }),
       });
 
-      if (!response.ok) throw new Error("AI failed to generate questions. Please try again.");
       const data = await response.json();
-      
-      setQuestions(data.questions);
-      */
+      if (!response.ok) {
+        throw new Error(data?.error || 'AI failed to generate questions. Please try again.');
+      }
 
-      // --- TEMP MOCK ---
-      await new Promise(resolve => setTimeout(resolve, 2500));
-      const generatedQuestions = Array(selectedCount).fill(null).map((_, i) => ({
-        question: `Based on the ${subjectName} syllabus, this is AI Practice Question #${i + 1}. Which of the following statements is logically correct?`,
-        options: ["The first concept fundamentally alters the theorem.", "The second theorem applies only in edge cases.", "The third principle is the universally accepted standard.", "The fourth rule is deprecated."],
-        correctAnswer: Math.floor(Math.random() * 4) 
-      }));
-      setQuestions(generatedQuestions);
-      // -----------------
+      if (!Array.isArray(data?.questions) || data.questions.length === 0) {
+        throw new Error('Quiz API returned no questions.');
+      }
+
+      setQuestions(data.questions);
 
       setCurrentQuestionIndex(0);
       setSelectedOptions({});
