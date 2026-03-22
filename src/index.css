@@ -1,1 +1,15 @@
 @import "tailwindcss";
+
+/* Aurora Text Animation */
+@keyframes aurora {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 200% 50%;
+  }
+}
+
+.animate-aurora {
+  animation: aurora linear infinite;
+}
