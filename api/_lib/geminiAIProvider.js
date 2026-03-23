@@ -2,6 +2,10 @@ import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
 
 const DEFAULT_MODEL = "gemini-3.1-flash-lite-preview";
 
+// ==========================================
+// SCHEMAS
+// ==========================================
+
 const quizSchema = {
   type: SchemaType.OBJECT,
   properties: {
@@ -35,6 +39,47 @@ const quizSchema = {
     "quiz questions"
   ]
 };
+
+const paperSchema = {
+  type: SchemaType.OBJECT,
+  properties: {
+    title: {
+      type: SchemaType.STRING,
+      description: "The title of the exam paper, e.g., 'Mid-Semester Examination: Data Structures'"
+    },
+    instructions: {
+      type: SchemaType.STRING,
+      description: "General instructions for the exam, e.g., 'Answer all questions. Time allotted: 2 Hours.'"
+    },
+    sections: {
+      type: SchemaType.ARRAY,
+      description: "The sections of the exam paper (e.g., Section A, Section B)",
+      items: {
+        type: SchemaType.OBJECT,
+        properties: {
+          name: {
+            type: SchemaType.STRING,
+            description: "Name of the section, e.g., 'Section A: Short Answer Questions (2 Marks each)'"
+          },
+          questions: {
+            type: SchemaType.ARRAY,
+            items: {
+              type: SchemaType.STRING,
+              description: "The actual question text"
+            }
+          }
+        },
+        propertyOrdering: ["name", "questions"]
+      }
+    }
+  },
+  propertyOrdering: ["title", "instructions", "sections"]
+};
+
+
+// ==========================================
+// UTILITY FUNCTIONS
+// ==========================================
 
 function getRequiredEnv(name) {
   const value = process.env[name];
@@ -70,6 +115,26 @@ function buildQuizPrompt({ subject, questionCount, instructions = "" }) {
     .join("\n");
 }
 
+function buildPaperPrompt({ subject, degreeType, examType, semester, extraInstructions }) {
+  return `
+    You are an expert university professor. Generate a highly probable prediction exam paper for the following criteria:
+    - Subject: ${subject}
+    - Degree Type: ${degreeType}
+    - Semester: ${semester}
+    - Exam Type: ${examType}
+    
+    Structure the paper realistically with appropriate sections (e.g., short answer, long answer/essay).
+    ${extraInstructions ? `Additional Instructions: ${extraInstructions}` : ""}
+    
+    Strictly output the response matching the provided JSON schema.
+  `.trim();
+}
+
+
+// ==========================================
+// EXPORTED GENERATION FUNCTIONS
+// ==========================================
+
 export async function generateQuizQuestions({ subject, questionCount, instructions = "" }) {
   const apiKey = getRequiredEnv("GEMINI_API_KEY");
   const modelName = process.env.GEMINI_MODEL || DEFAULT_MODEL;
@@ -84,7 +149,8 @@ export async function generateQuizQuestions({ subject, questionCount, instructio
   });
 
   const prompt = buildQuizPrompt({ subject, questionCount, instructions });
-  console.log(prompt);
+  console.log("Generating Quiz for:", subject);
+  
   const result = await model.generateContent(prompt);
   const text = result?.response?.text?.() || "{}";
 
@@ -107,28 +173,4 @@ export async function generateQuizQuestions({ subject, questionCount, instructio
   }
 
   return sanitized.slice(0, questionCount);
-}
-
-export async function generateChatResponse({ messages }) {
-  const apiKey = getRequiredEnv("GEMINI_API_KEY");
-  const modelName = process.env.GEMINI_MODEL || DEFAULT_MODEL;
-
-  const genAI = new GoogleGenerativeAI(apiKey);
-  
-  // Create model with system instruction
-  const model = genAI.getGenerativeModel({
-    model: modelName,
-    systemInstruction: "You are an AI Study Ally. Answer questions and be precise and to the point. Do not be overly chatty.",
-  });
-
-  // Map messages to Gemini format
-  // frontend uses: { role: 'user' | 'ai', content: '...' }
-  // gemini uses: { role: 'user' | 'model', parts: [{ text: '...' }] }
-  const contents = messages.map(msg => ({
-    role: msg.role === 'ai' ? 'model' : 'user',
-    parts: [{ text: msg.content }]
-  }));
-
-  const result = await model.generateContent({ contents });
-  return result?.response?.text?.() || "";
 }
