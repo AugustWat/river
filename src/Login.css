@@ -1,0 +1,160 @@
+body {
+  margin: 0;
+  font-family: "JetBrains Mono", system-ui, sans-serif;
+}
+
+.login-body {
+  height: 100vh;
+  background:
+    radial-gradient(circle at 12% -8%, rgba(0, 229, 255, 0.16), transparent 34%),
+    radial-gradient(circle at 92% 115%, rgba(255, 81, 250, 0.1), transparent 38%),
+    #000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #eaf5f8;
+}
+
+.login-container {
+  width: 420px;
+  background: rgba(8, 14, 18, 0.72);
+  backdrop-filter: blur(20px);
+  border-radius: 0;
+  border: 1px solid rgba(0, 229, 255, 0.24);
+  box-shadow: 0 0 28px rgba(0, 229, 255, 0.14), inset 0 0 22px rgba(0, 229, 255, 0.08);
+  overflow: hidden;
+  position: relative;
+}
+
+.login-container::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.02) 0,
+    rgba(255, 255, 255, 0.02) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+  opacity: 0.26;
+}
+
+.login-header {
+  background: linear-gradient(90deg, rgba(0, 229, 255, 0.22), rgba(255, 81, 250, 0.16));
+  padding: 18px 22px;
+  text-align: left;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-family: "Space Grotesk", sans-serif;
+  border-bottom: 1px solid rgba(0, 229, 255, 0.24);
+}
+
+.login-form {
+  padding: 28px;
+  position: relative;
+  z-index: 1;
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 11px;
+  color: #7cf7ff;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-family: "Space Grotesk", sans-serif;
+  font-weight: 700;
+}
+
+.form-input {
+  width: 100%;
+  padding: 12px;
+  border-radius: 0;
+  border: none;
+  border-bottom: 1px solid rgba(0, 229, 255, 0.35);
+  background: rgba(0, 0, 0, 0.35);
+  color: #eaf5f8;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form-input:focus {
+  border-bottom-color: #00e5ff;
+  box-shadow: inset 0 -1px 0 #00e5ff, 0 10px 20px rgba(0, 229, 255, 0.08);
+}
+
+.login-btn {
+  width: 100%;
+  padding: 12px;
+  border-radius: 0;
+  border: 1px solid rgba(0, 229, 255, 0.6);
+  background: linear-gradient(45deg, #9ff8ff, #00e5ff);
+  color: #051014;
+  font-weight: bold;
+  cursor: pointer;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  font-family: "Space Grotesk", sans-serif;
+  box-shadow: 0 0 18px rgba(0, 229, 255, 0.22);
+}
+
+.login-btn:hover {
+  filter: brightness(1.04);
+  box-shadow: 0 0 26px rgba(0, 229, 255, 0.34);
+}
+
+.extra {
+  margin-top: 15px;
+  text-align: center;
+  font-size: 12px;
+  color: #8ba0a7;
+}
+
+.link {
+  color: #ff51fa;
+  cursor: pointer;
+}
+.google-btn {
+  width: 100%;
+  padding: 12px;
+  margin-top: 15px;
+  background-color: rgba(7, 12, 16, 0.9);
+  color: #eaf5f8;
+  border: 1px solid rgba(255, 81, 250, 0.45);
+  border-radius: 0;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  font-family: "Space Grotesk", sans-serif;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+
+  transition: all 0.2s ease;
+}
+
+.google-btn:hover {
+  background-color: rgba(255, 81, 250, 0.08);
+  border-color: rgba(255, 81, 250, 0.8);
+  box-shadow: 0 0 16px rgba(255, 81, 250, 0.25);
+}
+
+.google-btn:active {
+  transform: scale(0.98);
+}
+.google-icon {
+  width: 18px;
+  height: 18px;
+}
