@@ -91,47 +91,50 @@ const Home = () => {
     setError(null);
 
     try {
-      const submitData = new FormData();
-      submitData.append("generationType", type);
-      submitData.append("subject", formData.subject);
-      submitData.append("degreeType", formData.degreeType);
-      submitData.append("examType", formData.examType);
-      submitData.append("semester", formData.semester);
-      submitData.append("extraInstructions", formData.extraInstructions);
-      if (type === "schedule") submitData.append("daysToPrepare", formData.daysToPrepare);
+      if (type === "paper") {
+        // --- REAL API CALL FOR PREDICTION PAPER ---
+        const payload = {
+          subject: formData.subject,
+          degreeType: formData.degreeType,
+          examType: formData.examType,
+          semester: formData.semester,
+          extraInstructions: formData.extraInstructions,
+        };
 
-      if (formData.syllabus) submitData.append("syllabus", formData.syllabus);
-      if (formData.pyq1) submitData.append("pyq1", formData.pyq1);
-      if (formData.pyq2) submitData.append("pyq2", formData.pyq2);
-
-      // --- TEMP MOCK DATA (Delete when API is ready) ---
-      await new Promise(resolve => setTimeout(resolve, 2500)); 
-      
-      if (type === "quiz") {
-        setGeneratedContent([
-          { question: "Based on the uploaded syllabus, which data structure is best for LIFO?", options: ["Queue", "Linked List", "Stack", "Tree"], correctAnswer: 2 },
-          { question: "What concept is tested most frequently in Section B?", options: ["Binary Search", "Dynamic Programming", "Graph Traversals", "Sorting Arrays"], correctAnswer: 1 },
-        ]);
-      } else if (type === "schedule") {
-        const days = parseInt(formData.daysToPrepare, 10);
-        setGeneratedContent({
-          title: `${formData.subject || 'Subject'} - ${days}-Day AI Study Plan`,
-          instructions: "Follow this tailored timeline to maximize your retention.",
-          schedule: Array.from({ length: days }, (_, i) => ({
-            day: i + 1,
-            focus: `Module ${i + 1} Core Concepts`,
-            tasks: ["Read textbook chapters", "Watch recommended lectures", "Solve practice numericals"],
-            hours: "2-3 hours"
-          }))
+        const response = await fetch("/api/paper/generate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
         });
+        
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "Failed to generate paper");
+        
+        setGeneratedContent(data.paper);
+
       } else {
-        setGeneratedContent({
-          title: `${formData.subject} - ${formData.examType} ${type.toUpperCase()}`,
-          instructions: "Read the generated content carefully.",
-          sections: [{ name: "Generated Content Output", questions: ["Backend API not connected yet.", "This will show the AI payload once hooked up!"] }],
-        });
+        // --- TEMP MOCK DATA FOR QUIZ & SCHEDULE ---
+        await new Promise(resolve => setTimeout(resolve, 2500)); 
+        
+        if (type === "quiz") {
+          setGeneratedContent([
+            { question: "Based on the uploaded syllabus, which data structure is best for LIFO?", options: ["Queue", "Linked List", "Stack", "Tree"], correctAnswer: 2 },
+            { question: "What concept is tested most frequently in Section B?", options: ["Binary Search", "Dynamic Programming", "Graph Traversals", "Sorting Arrays"], correctAnswer: 1 },
+          ]);
+        } else if (type === "schedule") {
+          const days = parseInt(formData.daysToPrepare, 10);
+          setGeneratedContent({
+            title: `${formData.subject || 'Subject'} - ${days}-Day AI Study Plan`,
+            instructions: "Follow this tailored timeline to maximize your retention.",
+            schedule: Array.from({ length: days }, (_, i) => ({
+              day: i + 1,
+              focus: `Module ${i + 1} Core Concepts`,
+              tasks: ["Read textbook chapters", "Watch recommended lectures", "Solve practice numericals"],
+              hours: "2-3 hours"
+            }))
+          });
+        }
       }
-      // ------------------------------------------------
 
       setAppState("output");
 
