@@ -14,6 +14,6 @@ if (providerName === "gemini") {
 
 export const {
   generateQuizQuestions,
-  generateChatResponse,
+  generatePredictionPaper, // new export for preduction paper
   // Add more AI functions here in the future (e.g., evaluateQuiz, etc)
 } = activeProvider;

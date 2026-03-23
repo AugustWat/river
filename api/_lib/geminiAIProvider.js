@@ -1,6 +1,11 @@
 import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
+import { GoogleAIFileManager } from "@google/generative-ai/server";
 
-const DEFAULT_MODEL = "gemini-3.1-flash-lite-preview";
+const DEFAULT_MODEL = "gemini-2.5-flash"; // Switched to 2.5-flash as it supports PDFs and multimodal inputs
+
+// ==========================================
+// SCHEMAS
+// ==========================================
 
 const quizSchema = {
   type: SchemaType.OBJECT,
@@ -36,6 +41,47 @@ const quizSchema = {
   ]
 };
 
+const paperSchema = {
+  type: SchemaType.OBJECT,
+  properties: {
+    title: {
+      type: SchemaType.STRING,
+      description: "The title of the exam paper, e.g., 'Mid-Semester Examination: Data Structures'"
+    },
+    instructions: {
+      type: SchemaType.STRING,
+      description: "General instructions for the exam, e.g., 'Answer all questions. Time allotted: 2 Hours.'"
+    },
+    sections: {
+      type: SchemaType.ARRAY,
+      description: "The sections of the exam paper (e.g., Section A, Section B)",
+      items: {
+        type: SchemaType.OBJECT,
+        properties: {
+          name: {
+            type: SchemaType.STRING,
+            description: "Name of the section, e.g., 'Section A: Short Answer Questions (2 Marks each)'"
+          },
+          questions: {
+            type: SchemaType.ARRAY,
+            items: {
+              type: SchemaType.STRING,
+              description: "The actual question text"
+            }
+          }
+        },
+        propertyOrdering: ["name", "questions"]
+      }
+    }
+  },
+  propertyOrdering: ["title", "instructions", "sections"]
+};
+
+
+// ==========================================
+// UTILITY FUNCTIONS
+// ==========================================
+
 function getRequiredEnv(name) {
   const value = process.env[name];
   if (!value || !String(value).trim()) {
@@ -70,6 +116,43 @@ function buildQuizPrompt({ subject, questionCount, instructions = "" }) {
     .join("\n");
 }
 
+function buildPaperPrompt({ subject, degreeType, examType, semester, extraInstructions, hasFiles }) {
+  let prompt = `You are an expert university professor. Generate a highly probable prediction exam paper for the following criteria:
+    - Subject: ${subject}
+    - Degree Type: ${degreeType}
+    - Semester: ${semester}
+    - Exam Type: ${examType}\n\n`;
+
+  if (hasFiles) {
+    prompt += `I have attached the syllabus and/or past year questions (PYQs) as reference files. STRONGLY base the generated questions on the topics and difficulty level found in these documents.\n\n`;
+  }
+
+  prompt += `Structure the paper realistically with appropriate sections (e.g., short answer, long answer/essay).
+    ${extraInstructions ? `Additional Instructions: ${extraInstructions}` : ""}
+    
+    Strictly output the response matching the provided JSON schema.`;
+
+  return prompt.trim();
+}
+
+// Helper function to upload files to Google
+async function uploadToGoogle(fileManager, filePath, mimeType) {
+  try {
+    const uploadResult = await fileManager.uploadFile(filePath, {
+      mimeType,
+      displayName: "User Uploaded Document",
+    });
+    return uploadResult.file;
+  } catch (error) {
+    console.error("Failed to upload file to Google AI:", error);
+    return null;
+  }
+}
+
+// ==========================================
+// EXPORTED GENERATION FUNCTIONS
+// ==========================================
+
 export async function generateQuizQuestions({ subject, questionCount, instructions = "" }) {
   const apiKey = getRequiredEnv("GEMINI_API_KEY");
   const modelName = process.env.GEMINI_MODEL || DEFAULT_MODEL;
@@ -84,7 +167,8 @@ export async function generateQuizQuestions({ subject, questionCount, instructio
   });
 
   const prompt = buildQuizPrompt({ subject, questionCount, instructions });
-  console.log(prompt);
+  console.log("Generating Quiz for:", subject);
+  
   const result = await model.generateContent(prompt);
   const text = result?.response?.text?.() || "{}";
 
@@ -109,26 +193,54 @@ export async function generateQuizQuestions({ subject, questionCount, instructio
   return sanitized.slice(0, questionCount);
 }
 
-export async function generateChatResponse({ messages }) {
+export async function generatePredictionPaper(params) {
   const apiKey = getRequiredEnv("GEMINI_API_KEY");
-  const modelName = process.env.GEMINI_MODEL || DEFAULT_MODEL;
+  const modelName = process.env.GEMINI_MODEL || DEFAULT_MODEL; 
 
   const genAI = new GoogleGenerativeAI(apiKey);
+  const fileManager = new GoogleAIFileManager(apiKey);
   
-  // Create model with system instruction
   const model = genAI.getGenerativeModel({
     model: modelName,
-    systemInstruction: "You are an AI Study Ally. Answer questions and be precise and to the point. Do not be overly chatty.",
+    generationConfig: {
+      responseMimeType: "application/json",
+      responseSchema: paperSchema,
+    },
   });
 
-  // Map messages to Gemini format
-  // frontend uses: { role: 'user' | 'ai', content: '...' }
-  // gemini uses: { role: 'user' | 'model', parts: [{ text: '...' }] }
-  const contents = messages.map(msg => ({
-    role: msg.role === 'ai' ? 'model' : 'user',
-    parts: [{ text: msg.content }]
-  }));
+  // 1. Process uploaded files
+  const fileParts = [];
+  if (params.files && params.files.length > 0) {
+    console.log(`Uploading ${params.files.length} files to Gemini...`);
+    for (const file of params.files) {
+      // formidable creates a temporary file on the server, accessible via file.filepath
+      const gFile = await uploadToGoogle(fileManager, file.filepath, file.mimetype || "application/pdf");
+      if (gFile) {
+        fileParts.push({
+          fileData: {
+            mimeType: gFile.mimeType,
+            fileUri: gFile.uri
+          }
+        });
+      }
+    }
+  }
 
-  const result = await model.generateContent({ contents });
-  return result?.response?.text?.() || "";
+  // 2. Build the text prompt
+  const hasFiles = fileParts.length > 0;
+  const promptText = buildPaperPrompt({ ...params, hasFiles });
+  
+  // 3. Combine files and text for the AI (multimodal array)
+  const aiPayload = [...fileParts, promptText];
+
+  console.log("Generating Paper for:", params.subject, "with", fileParts.length, "files.");
+  
+  const result = await model.generateContent(aiPayload);
+  const text = result?.response?.text?.() || "{}";
+
+  try {
+    return JSON.parse(text);
+  } catch (err) {
+    throw new Error("AI response was not valid JSON for the prediction paper.");
+  }
 }
