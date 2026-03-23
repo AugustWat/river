@@ -3,12 +3,17 @@ import PracticeQuiz from "./PracticeQuiz";
 import MagicCard from "./MagicCard";
 import { AuroraText } from "./AuroraText";
 import Footer from "./Footer";
+import { useNavigate } from "react-router-dom";
 
 // 🟢 BACKEND SENIORS: Set your API base URL here
 
 const Home = () => {
+
+  const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
+  const navigate = useNavigate();   
   const [appState, setAppState] = useState("input");
   const [error, setError] = useState(null); 
+  const [showIntro, setShowIntro] = useState(true);
 
   const [formData, setFormData] = useState({
     syllabus: null,
@@ -145,6 +150,86 @@ const Home = () => {
     else handleGenerate({ preventDefault: () => {} }, generationType); 
   };
 
+ if (showIntro) {
+
+  const handleActionClick = () => {
+    if (!isLoggedIn) {
+      navigate("/login");
+    } else {
+      setShowIntro(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-black text-white px-4 flex flex-col">
+
+      {/* 🔥 Top Bar */}
+      <div className="w-full flex justify-end p-4">
+        {isLoggedIn ? (
+          <span className="text-sm font-medium text-gray-300">
+            Welcome {
+              localStorage.getItem("username")
+            } 
+          </span>
+        ) : (
+          <button
+            onClick={() => navigate("/Login")}
+            className="border border-gray-700 px-5 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition"
+          >
+            Login
+          </button>
+        )}
+      </div>
+
+      {/* Center Content */}
+      <div className="flex flex-1 flex-col items-center justify-center">
+        
+        {/* Title */}
+        <h1 className="text-5xl md:text-6xl font-extrabold text-red-500 mb-4">
+          StudyAlly 🔥
+        </h1>
+
+        <p className="text-gray-400 mb-10 text-center max-w-lg">
+          Your AI-powered learning companion. Choose what you want to do.
+        </p>
+
+        {/* Student Section */}
+        <div className="flex flex-col gap-4 w-full max-w-md">
+          
+          <button
+            onClick={handleActionClick}
+            className="w-full bg-red-600 hover:bg-red-700 px-6 py-4 rounded-xl font-bold text-lg transition shadow-lg"
+          >
+            📘 Study a New Topic
+          </button>
+
+          <button
+            onClick={handleActionClick}
+            className="w-full bg-gray-900 border border-gray-700 hover:bg-gray-800 px-6 py-4 rounded-xl font-semibold text-lg transition"
+          >
+            📝 Prepare for Exams
+          </button>
+
+        </div>
+
+        {/* Parent Section */}
+        <div className="mt-10 w-full max-w-md text-center">
+          <h2 className="text-sm uppercase tracking-wider text-gray-500 mb-3">
+            For Parents
+          </h2>
+
+          <button
+            onClick={handleActionClick}
+            className="w-full bg-blue-600 hover:bg-blue-700 px-6 py-4 rounded-xl font-semibold text-lg transition"
+          >
+            👨‍👩‍👧 Track Your Child's Progress
+          </button>
+        </div>
+
+      </div>
+    </div>
+  );
+}
   return (
     <div
       // CHANGED: Removed padding from the outer wrapper so the footer can expand fully

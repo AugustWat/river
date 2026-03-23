@@ -39,7 +39,7 @@ function Login() {
     console.log("Logged in:", userCred.user);
 
     localStorage.setItem("token", userCred.user.uid);
-
+    localStorage.setItem("isLoggedIn", "true");
     navigate("/home");
 
   } catch (error) {
@@ -68,7 +68,7 @@ const handleSignup = async () => {
     console.log("User created:", userCred.user);
 
     localStorage.setItem("token", userCred.user.uid);
-
+    localStorage.setItem("isLoggedIn", "true");
     navigate("/Home");
 
   } catch (error) {
@@ -84,6 +84,7 @@ const handleGoogleSignIn = async () => {
     console.log("Google sign-in:", user);
 
     localStorage.setItem("token", user.uid);
+    localStorage.setItem("isLoggedIn", "true");
 
     navigate("/Home");
   } catch (error) {
