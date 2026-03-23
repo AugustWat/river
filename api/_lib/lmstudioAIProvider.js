@@ -113,3 +113,44 @@ export async function generateQuizQuestions({ subject, questionCount, instructio
 
   return sanitized.slice(0, questionCount);
 }
+
+export async function generateChatResponse({ messages }) {
+  const apiUrl = process.env.LMSTUDIO_API_URL || DEFAULT_URL;
+  const modelName = process.env.LMSTUDIO_MODEL || DEFAULT_MODEL;
+
+  // Map messages to OpenAI format
+  // frontend uses: { role: 'user' | 'ai', content: '...' }
+  // openai uses: { role: 'user' | 'assistant', content: '...' }
+  const formattedMessages = messages.map(msg => ({
+    role: msg.role === 'ai' ? 'assistant' : 'user',
+    content: msg.content
+  }));
+
+  const payload = {
+    model: modelName,
+    messages: [
+      { role: "system", content: "You are an AI Study Ally. Answer questions and be precise and to the point. Do not be overly chatty." },
+      ...formattedMessages
+    ],
+    temperature: 0.7
+  };
+
+  const response = await fetch(apiUrl, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  });
+
+  if (!response.ok) {
+    throw new Error(`LM Studio API error: ${response.status} ${response.statusText}`);
+  }
+
+  const resultData = await response.json();
+  const content = resultData.choices?.[0]?.message?.content;
+
+  if (!content) {
+    throw new Error("LM Studio returned an empty response.");
+  }
+
+  return content;
+}

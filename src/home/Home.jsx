@@ -71,10 +71,19 @@ const Home = () => {
     setIsChatTyping(true);
 
     try {
-      // --- TEMP MOCK (Delete when API is ready) ---
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      setChatMessages(prev => [...prev, { role: "ai", content: `(Mock API) You asked about ${formData.subject}. Once hooked up, Gemini will answer this!` }]);
-      // --------------------------------------------
+      const response = await fetch('/api/chat/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages: updatedMessages })
+      });
+
+      if (!response.ok) {
+        throw new Error(`API returned ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      setChatMessages(prev => [...prev, { role: "ai", content: data.reply }]);
 
     } catch (err) {
       console.error("Chat API Error:", err);

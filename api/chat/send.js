@@ -1,4 +1,4 @@
-import { generateQuizQuestions } from "../_lib/aiProvider.js";
+import { generateChatResponse } from "../_lib/aiProvider.js";
 
 function sendJson(res, status, body) {
   res.statusCode = status;
@@ -16,7 +16,7 @@ function parseBody(req) {
     let data = "";
     req.on("data", (chunk) => {
       data += chunk;
-      if (data.length > 1_000_000) {
+      if (data.length > 2_000_000) {
         reject(new Error("Request body too large"));
       }
     });
@@ -37,16 +37,23 @@ function parseBody(req) {
 }
 
 function validateInput(body) {
-  const subject = typeof body.subject === "string" ? body.subject.trim() : "";
-  const questionCount = Number.parseInt(body.questionCount, 10);
-  const instructions = typeof body.instructions === "string" ? body.instructions.trim() : "";
+  const messages = Array.isArray(body.messages) ? body.messages : [];
 
-  if (!subject) return { error: "`subject` is required." };
-  if (!Number.isFinite(questionCount) || questionCount < 1 || questionCount > 50) {
-    return { error: "`questionCount` must be an integer between 1 and 50." };
+  if (messages.length === 0) {
+    return { error: "`messages` array is required and cannot be empty." };
   }
 
-  return { subject, questionCount, instructions };
+  // Basic validation that each message has a role and content
+  for (const msg of messages) {
+    if (typeof msg !== 'object' || !msg.role || !msg.content) {
+      return { error: "Each message must be an object with 'role' and 'content' string properties." };
+    }
+    if (msg.role !== 'user' && msg.role !== 'ai') {
+      return { error: "Message roles must be either 'user' or 'ai'." };
+    }
+  }
+
+  return { messages };
 }
 
 export default async function handler(req, res) {
@@ -57,19 +64,20 @@ export default async function handler(req, res) {
 
   try {
     const body = await parseBody(req);
-    console.log('=> Received backend request to /api/quiz/generate', { path: req.url, method: req.method, body });
+    console.log('=> Received backend request to /api/chat/send', { path: req.url, method: req.method, messagesCount: body.messages?.length });
+    
     const validated = validateInput(body);
 
     if (validated.error) {
       return sendJson(res, 400, { error: validated.error });
     }
 
-    const questions = await generateQuizQuestions(validated);
+    const reply = await generateChatResponse(validated);
 
-    return sendJson(res, 200, { questions });
+    return sendJson(res, 200, { reply });
   } catch (error) {
-    console.error("Quiz Generation API Error:", error);
     const message = error instanceof Error ? error.message : "Unexpected server error";
+    console.error("Chat API Error:", error);
     return sendJson(res, 500, { error: message });
   }
 }

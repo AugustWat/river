@@ -108,3 +108,27 @@ export async function generateQuizQuestions({ subject, questionCount, instructio
 
   return sanitized.slice(0, questionCount);
 }
+
+export async function generateChatResponse({ messages }) {
+  const apiKey = getRequiredEnv("GEMINI_API_KEY");
+  const modelName = process.env.GEMINI_MODEL || DEFAULT_MODEL;
+
+  const genAI = new GoogleGenerativeAI(apiKey);
+  
+  // Create model with system instruction
+  const model = genAI.getGenerativeModel({
+    model: modelName,
+    systemInstruction: "You are an AI Study Ally. Answer questions and be precise and to the point. Do not be overly chatty.",
+  });
+
+  // Map messages to Gemini format
+  // frontend uses: { role: 'user' | 'ai', content: '...' }
+  // gemini uses: { role: 'user' | 'model', parts: [{ text: '...' }] }
+  const contents = messages.map(msg => ({
+    role: msg.role === 'ai' ? 'model' : 'user',
+    parts: [{ text: msg.content }]
+  }));
+
+  const result = await model.generateContent({ contents });
+  return result?.response?.text?.() || "";
+}
