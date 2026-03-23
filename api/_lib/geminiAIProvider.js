@@ -2,6 +2,10 @@ import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
 
 const DEFAULT_MODEL = "gemini-3.1-flash-lite-preview";
 
+// ==========================================
+// SCHEMAS
+// ==========================================
+
 const quizSchema = {
   type: SchemaType.OBJECT,
   properties: {
@@ -35,6 +39,47 @@ const quizSchema = {
     "quiz questions"
   ]
 };
+
+const paperSchema = {
+  type: SchemaType.OBJECT,
+  properties: {
+    title: {
+      type: SchemaType.STRING,
+      description: "The title of the exam paper, e.g., 'Mid-Semester Examination: Data Structures'"
+    },
+    instructions: {
+      type: SchemaType.STRING,
+      description: "General instructions for the exam, e.g., 'Answer all questions. Time allotted: 2 Hours.'"
+    },
+    sections: {
+      type: SchemaType.ARRAY,
+      description: "The sections of the exam paper (e.g., Section A, Section B)",
+      items: {
+        type: SchemaType.OBJECT,
+        properties: {
+          name: {
+            type: SchemaType.STRING,
+            description: "Name of the section, e.g., 'Section A: Short Answer Questions (2 Marks each)'"
+          },
+          questions: {
+            type: SchemaType.ARRAY,
+            items: {
+              type: SchemaType.STRING,
+              description: "The actual question text"
+            }
+          }
+        },
+        propertyOrdering: ["name", "questions"]
+      }
+    }
+  },
+  propertyOrdering: ["title", "instructions", "sections"]
+};
+
+
+// ==========================================
+// UTILITY FUNCTIONS
+// ==========================================
 
 function getRequiredEnv(name) {
   const value = process.env[name];
@@ -70,6 +115,26 @@ function buildQuizPrompt({ subject, questionCount, instructions = "" }) {
     .join("\n");
 }
 
+function buildPaperPrompt({ subject, degreeType, examType, semester, extraInstructions }) {
+  return `
+    You are an expert university professor. Generate a highly probable prediction exam paper for the following criteria:
+    - Subject: ${subject}
+    - Degree Type: ${degreeType}
+    - Semester: ${semester}
+    - Exam Type: ${examType}
+    
+    Structure the paper realistically with appropriate sections (e.g., short answer, long answer/essay).
+    ${extraInstructions ? `Additional Instructions: ${extraInstructions}` : ""}
+    
+    Strictly output the response matching the provided JSON schema.
+  `.trim();
+}
+
+
+// ==========================================
+// EXPORTED GENERATION FUNCTIONS
+// ==========================================
+
 export async function generateQuizQuestions({ subject, questionCount, instructions = "" }) {
   const apiKey = getRequiredEnv("GEMINI_API_KEY");
   const modelName = process.env.GEMINI_MODEL || DEFAULT_MODEL;
@@ -84,7 +149,8 @@ export async function generateQuizQuestions({ subject, questionCount, instructio
   });
 
   const prompt = buildQuizPrompt({ subject, questionCount, instructions });
-  console.log(prompt);
+  console.log("Generating Quiz for:", subject);
+  
   const result = await model.generateContent(prompt);
   const text = result?.response?.text?.() || "{}";
 
@@ -107,4 +173,30 @@ export async function generateQuizQuestions({ subject, questionCount, instructio
   }
 
   return sanitized.slice(0, questionCount);
+}
+
+export async function generatePredictionPaper(params) {
+  const apiKey = getRequiredEnv("GEMINI_API_KEY");
+  const modelName = process.env.GEMINI_MODEL || DEFAULT_MODEL; 
+
+  const genAI = new GoogleGenerativeAI(apiKey);
+  const model = genAI.getGenerativeModel({
+    model: modelName,
+    generationConfig: {
+      responseMimeType: "application/json",
+      responseSchema: paperSchema,
+    },
+  });
+
+  const prompt = buildPaperPrompt(params);
+  console.log("Generating Paper for:", params.subject);
+  
+  const result = await model.generateContent(prompt);
+  const text = result?.response?.text?.() || "{}";
+
+  try {
+    return JSON.parse(text);
+  } catch (err) {
+    throw new Error("AI response was not valid JSON for the prediction paper.");
+  }
 }
