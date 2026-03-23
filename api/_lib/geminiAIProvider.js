@@ -1,6 +1,7 @@
 import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
+import { GoogleAIFileManager } from "@google/generative-ai/server";
 
-const DEFAULT_MODEL = "gemini-3.1-flash-lite-preview";
+const DEFAULT_MODEL = "gemini-2.5-flash"; // Switched to 2.5-flash as it supports PDFs and multimodal inputs
 
 // ==========================================
 // SCHEMAS
@@ -115,21 +116,38 @@ function buildQuizPrompt({ subject, questionCount, instructions = "" }) {
     .join("\n");
 }
 
-function buildPaperPrompt({ subject, degreeType, examType, semester, extraInstructions }) {
-  return `
-    You are an expert university professor. Generate a highly probable prediction exam paper for the following criteria:
+function buildPaperPrompt({ subject, degreeType, examType, semester, extraInstructions, hasFiles }) {
+  let prompt = `You are an expert university professor. Generate a highly probable prediction exam paper for the following criteria:
     - Subject: ${subject}
     - Degree Type: ${degreeType}
     - Semester: ${semester}
-    - Exam Type: ${examType}
-    
-    Structure the paper realistically with appropriate sections (e.g., short answer, long answer/essay).
+    - Exam Type: ${examType}\n\n`;
+
+  if (hasFiles) {
+    prompt += `I have attached the syllabus and/or past year questions (PYQs) as reference files. STRONGLY base the generated questions on the topics and difficulty level found in these documents.\n\n`;
+  }
+
+  prompt += `Structure the paper realistically with appropriate sections (e.g., short answer, long answer/essay).
     ${extraInstructions ? `Additional Instructions: ${extraInstructions}` : ""}
     
-    Strictly output the response matching the provided JSON schema.
-  `.trim();
+    Strictly output the response matching the provided JSON schema.`;
+
+  return prompt.trim();
 }
 
+// Helper function to upload files to Google
+async function uploadToGoogle(fileManager, filePath, mimeType) {
+  try {
+    const uploadResult = await fileManager.uploadFile(filePath, {
+      mimeType,
+      displayName: "User Uploaded Document",
+    });
+    return uploadResult.file;
+  } catch (error) {
+    console.error("Failed to upload file to Google AI:", error);
+    return null;
+  }
+}
 
 // ==========================================
 // EXPORTED GENERATION FUNCTIONS
@@ -173,4 +191,56 @@ export async function generateQuizQuestions({ subject, questionCount, instructio
   }
 
   return sanitized.slice(0, questionCount);
+}
+
+export async function generatePredictionPaper(params) {
+  const apiKey = getRequiredEnv("GEMINI_API_KEY");
+  const modelName = process.env.GEMINI_MODEL || DEFAULT_MODEL; 
+
+  const genAI = new GoogleGenerativeAI(apiKey);
+  const fileManager = new GoogleAIFileManager(apiKey);
+  
+  const model = genAI.getGenerativeModel({
+    model: modelName,
+    generationConfig: {
+      responseMimeType: "application/json",
+      responseSchema: paperSchema,
+    },
+  });
+
+  // 1. Process uploaded files
+  const fileParts = [];
+  if (params.files && params.files.length > 0) {
+    console.log(`Uploading ${params.files.length} files to Gemini...`);
+    for (const file of params.files) {
+      // formidable creates a temporary file on the server, accessible via file.filepath
+      const gFile = await uploadToGoogle(fileManager, file.filepath, file.mimetype || "application/pdf");
+      if (gFile) {
+        fileParts.push({
+          fileData: {
+            mimeType: gFile.mimeType,
+            fileUri: gFile.uri
+          }
+        });
+      }
+    }
+  }
+
+  // 2. Build the text prompt
+  const hasFiles = fileParts.length > 0;
+  const promptText = buildPaperPrompt({ ...params, hasFiles });
+  
+  // 3. Combine files and text for the AI (multimodal array)
+  const aiPayload = [...fileParts, promptText];
+
+  console.log("Generating Paper for:", params.subject, "with", fileParts.length, "files.");
+  
+  const result = await model.generateContent(aiPayload);
+  const text = result?.response?.text?.() || "{}";
+
+  try {
+    return JSON.parse(text);
+  } catch (err) {
+    throw new Error("AI response was not valid JSON for the prediction paper.");
+  }
 }
