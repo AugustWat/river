@@ -14,7 +14,7 @@ const PracticeQuiz = ({ formData, onBackToMenu }) => {
   const [selectedOptions, setSelectedOptions] = useState({});
   const [dashboardData, setDashboardData] = useState(null);
 
-  const subjectName = formData?.subject || 'Study Ally';
+  const subjectName = formData?.subject || 'OS Concepts';
 
   // ==========================================
   // 🟢 BACKEND SENIORS: QUIZ GENERATION API

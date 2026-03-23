@@ -35,15 +35,11 @@ Response body:
 
 ## Environment variables
 
-Set these in `.env`:
+.env contains: 
 
-```dotenv
 AI_PROVIDER=gemini
-GEMINI_API_KEY=your_key_here
-# Optional
-GEMINI_MODEL=gemini-1.5-flash
-VITE_API_BASE_URL=/api/quiz
-```
+GEMINI_API_KEY=...
+GEMINI_MODEL=gemini-...
 
 ## Local development
 

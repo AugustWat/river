@@ -57,6 +57,7 @@ export default async function handler(req, res) {
 
   try {
     const body = await parseBody(req);
+    console.log('=> Received backend request to /api/quiz/generate', { path: req.url, method: req.method, body });
     const validated = validateInput(body);
 
     if (validated.error) {
