@@ -40,6 +40,13 @@ function Login() {
 
     localStorage.setItem("token", userCred.user.uid);
     localStorage.setItem("isLoggedIn", "true");
+    // store username (displayName if available, otherwise email local-part)
+    try {
+      const uname = userCred.user.displayName || (userCred.user.email ? userCred.user.email.split('@')[0] : "");
+      localStorage.setItem("username", uname);
+    } catch (e) {
+      localStorage.setItem("username", "");
+    }
     navigate("/home");
 
   } catch (error) {
@@ -69,6 +76,13 @@ const handleSignup = async () => {
 
     localStorage.setItem("token", userCred.user.uid);
     localStorage.setItem("isLoggedIn", "true");
+    // store username (displayName if available, otherwise email local-part)
+    try {
+      const uname = userCred.user.displayName || (userCred.user.email ? userCred.user.email.split('@')[0] : "");
+      localStorage.setItem("username", uname);
+    } catch (e) {
+      localStorage.setItem("username", "");
+    }
     navigate("/Home");
 
   } catch (error) {
@@ -85,6 +99,13 @@ const handleGoogleSignIn = async () => {
 
     localStorage.setItem("token", user.uid);
     localStorage.setItem("isLoggedIn", "true");
+    // store username (displayName if available, otherwise email local-part)
+    try {
+      const uname = user.displayName || (user.email ? user.email.split('@')[0] : "");
+      localStorage.setItem("username", uname);
+    } catch (e) {
+      localStorage.setItem("username", "");
+    }
 
     navigate("/Home");
   } catch (error) {

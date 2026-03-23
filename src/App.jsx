@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './Login';
 import Home from './home/Home';
+import ParentsDashboard from './ParentsDashboard';
 
 // 1. Create a wrapper component that checks auth dynamically
 const ProtectedRoute = ({ children }) => {
@@ -24,6 +25,16 @@ const App = () => {
               <Home />
             </ProtectedRoute>
           } 
+        />
+
+        {/* Parents dashboard route */}
+        <Route
+          path="/ParentsDashboard"
+          element={
+            <ProtectedRoute>
+              <ParentsDashboard />
+            </ProtectedRoute>
+          }
         />
 
         {/* Default Route */}

@@ -172,9 +172,11 @@ const Home = () => {
 
   const handleActionClick = () => {
     if (!isLoggedIn) {
+      console.log("User not logged in, navigating to Login...");
       navigate("/login");
     } else {
-      setShowIntro(false);
+      console.log("User is logged in, navigating to ParentsDashboard...");
+    navigate("/ParentsDashboard");
     }
   };
 
