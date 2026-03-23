@@ -141,10 +141,10 @@ const PracticeQuiz = ({ formData, onBackToMenu }) => {
   };
 
   return (
-    <MagicCard className="w-[95vw] max-w-6xl min-h-[85vh] flex flex-col mx-auto rounded-3xl overflow-hidden border border-gray-800 bg-black/60 backdrop-blur-xl shadow-2xl shadow-red-900/20 mb-12">
+    <MagicCard className="w-[95vw] max-w-6xl min-h-[85vh] flex flex-col mx-auto rounded-3xl overflow-hidden border border-gray-800 bg-black/60 backdrop-blur-xl shadow-2xl shadow-red-900/20 mb-12 hud-panel hud-grid neon-corner">
       
       {/* Header */}
-      <div className="bg-gradient-to-r from-red-950/80 via-black to-black px-8 py-6 border-b border-gray-800 flex justify-between items-center z-10">
+      <div className="bg-gradient-to-r from-red-950/80 via-black to-black px-8 py-6 border-b border-cyan-500/20 flex justify-between items-center z-10">
         <h1 className="text-2xl font-bold text-white tracking-wide flex items-center gap-3">
           {/* Dynamic Subject Name! */}
           {subjectName} <span className="text-red-600">|</span> 
@@ -152,17 +152,21 @@ const PracticeQuiz = ({ formData, onBackToMenu }) => {
             {quizState === 'dashboard' ? 'Performance Analytics' : 'Practice Mode'}
           </span>
         </h1>
-        {quizState === 'active' && (
-          <div className="flex items-center gap-4">
-            <span className="text-sm font-medium text-red-400 uppercase tracking-widest">Question</span>
-            <span className="text-lg font-mono text-gray-200 bg-red-950/40 px-4 py-1.5 rounded-lg border border-red-900/50 shadow-inner">
-              {currentQuestionIndex + 1} <span className="text-gray-500">/</span> {questions.length}
-            </span>
-          </div>
-        )}
+        <div className="flex items-center gap-4">
+          <span className="kinetic-orb" />
+          <span className="neon-pill hidden sm:inline-flex">quiz session live</span>
+          {quizState === 'active' && (
+            <>
+              <span className="text-sm font-medium text-red-400 uppercase tracking-widest">Question</span>
+              <span className="text-lg font-mono text-gray-200 bg-red-950/40 px-4 py-1.5 rounded-lg border border-red-900/50 shadow-inner">
+                {currentQuestionIndex + 1} <span className="text-gray-500">/</span> {questions.length}
+              </span>
+            </>
+          )}
+        </div>
       </div>
 
-      <div className="flex-1 flex flex-col justify-center p-8 md:p-12 overflow-y-auto scrollbar-thin scrollbar-thumb-red-900/50 scrollbar-track-transparent z-10">
+      <div className="flex-1 flex flex-col justify-center p-8 md:p-12 overflow-y-auto scrollbar-thin scrollbar-thumb-red-900/50 scrollbar-track-transparent z-10 scanline-overlay">
         
         {/* --- ERROR STATE --- */}
         {quizState === 'error' && (
@@ -191,6 +195,11 @@ const PracticeQuiz = ({ formData, onBackToMenu }) => {
                 Configure Your Session
               </h2>
               <p className="text-gray-400 text-lg">Select how many AI-generated questions you want to tackle based on your uploaded materials.</p>
+            </div>
+
+            <div className="flex items-center justify-center gap-3">
+              <span className="neon-pill">adaptive sampling</span>
+              <span className="neon-pill">real-time eval</span>
             </div>
 
             <div className="flex flex-wrap justify-center gap-6">
@@ -298,7 +307,7 @@ const PracticeQuiz = ({ formData, onBackToMenu }) => {
               Session Complete
             </h2>
             
-            <div className="relative inline-flex flex-col items-center justify-center w-56 h-56 rounded-full border-8 border-red-900/40 bg-black/60 shadow-[0_0_50px_rgba(220,38,38,0.3)] backdrop-blur-sm">
+            <div className="relative inline-flex flex-col items-center justify-center w-56 h-56 rounded-full border-8 border-red-900/40 bg-black/60 shadow-[0_0_50px_rgba(220,38,38,0.3)] backdrop-blur-sm glow-frame">
               <div className="absolute inset-0 rounded-full bg-gradient-to-b from-red-600/20 to-transparent pointer-events-none"></div>
               <span className="text-7xl font-black text-white drop-shadow-lg">{calculateScore()}</span>
               <div className="w-16 h-1 bg-gray-700 my-2 rounded-full"></div>

@@ -18,14 +18,14 @@ const MagicCard = ({ children, className = "" }) => {
       onMouseMove={handleMouseMove}
       onMouseEnter={() => setOpacity(1)}
       onMouseLeave={() => setOpacity(0)}
-      className={`relative overflow-hidden rounded-3xl bg-black/60 backdrop-blur-xl border border-gray-800 shadow-2xl shadow-red-900/20 transition-colors duration-300 ${className}`}
+      className={`relative overflow-hidden rounded-none bg-black/60 backdrop-blur-xl border border-cyan-400/30 shadow-2xl shadow-cyan-500/10 transition-colors duration-300 ${className}`}
     >
       {/* The Magic Spotlight Effect */}
       <div
         className="pointer-events-none absolute -inset-px transition-opacity duration-300"
         style={{
           opacity,
-          background: `radial-gradient(600px circle at ${position.x}px ${position.y}px, rgba(220, 38, 38, 0.15), transparent 40%)`,
+          background: `radial-gradient(600px circle at ${position.x}px ${position.y}px, rgba(0, 229, 255, 0.16), rgba(255, 81, 250, 0.08) 28%, transparent 44%)`,
         }}
       />
       

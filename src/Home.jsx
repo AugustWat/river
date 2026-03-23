@@ -148,27 +148,37 @@ const Home = () => {
   return (
     <div
       // CHANGED: Removed padding from the outer wrapper so the footer can expand fully
-      className="min-h-screen flex flex-col font-sans text-gray-200 overflow-x-hidden"
+      className="kinetic-theme kinetic-canvas min-h-screen flex flex-col text-gray-200 overflow-x-hidden"
       style={{
         backgroundColor: "#000000",
         backgroundImage: `
-          radial-gradient(circle at 50% 0%, rgba(50, 0, 0, 0.2) 0%, transparent 60%),
+          radial-gradient(circle at 15% -10%, rgba(0, 229, 255, 0.18) 0%, transparent 38%),
+          radial-gradient(circle at 90% 110%, rgba(255, 81, 250, 0.1) 0%, transparent 44%),
           url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.08'/%3E%3C/svg%3E")
         `,
       }}
     >
       {/* CHANGED: Added a <main> tag to hold the padding and center your cards */}
-      <main className="flex-1 flex flex-col items-center justify-start pt-12 pb-20 px-4 sm:px-6 lg:px-12 w-full">
+      <main className="flex-1 flex flex-col items-center justify-start pt-12 pb-20 px-4 sm:px-6 lg:px-12 w-full relative">
         
         <div className="mb-8 text-center z-10 mt-8 lg:mt-0">
           <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight text-white mb-2">
-            <AuroraText colors={["#ff4b4b", "#dc2626", "#991b1b", "#ef4444"]}>
+            <AuroraText colors={["#7cf7ff", "#00dbe9", "#ffffff", "#ff51fa"]}>
               StudyAlly
             </AuroraText>
           </h1>
           <p className="text-red-400/80 font-medium tracking-wide text-sm md:text-base">
             AI-Powered Exam Prep Companion
           </p>
+        </div>
+
+        <div className="w-[95vw] max-w-7xl mb-4 flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <span className="kinetic-orb" />
+            <span className="neon-pill">System Core Online</span>
+            <span className="neon-pill">Neural Mode Active</span>
+          </div>
+          <div className="neon-pill float-orb">UI Profile: KINETIC_INTERFACE</div>
         </div>
 
         {error && appState === "input" && (
@@ -181,13 +191,22 @@ const Home = () => {
         )}
 
         {!(appState === "output" && generationType === "quiz") && (
-          <MagicCard className="w-[95vw] max-w-7xl min-h-[85vh] flex flex-col mx-auto rounded-3xl overflow-hidden border border-gray-800 bg-black/60 backdrop-blur-xl shadow-2xl shadow-red-900/20">
-            <div className="flex-1 w-full flex flex-col overflow-y-auto p-6 md:p-12 scrollbar-thin scrollbar-thumb-red-900/50 scrollbar-track-transparent">
+          <MagicCard className="w-[95vw] max-w-7xl min-h-[85vh] flex flex-col mx-auto rounded-3xl overflow-hidden border border-gray-800 bg-black/60 backdrop-blur-xl shadow-2xl shadow-red-900/20 hud-panel hud-grid neon-corner">
+            <div className="px-6 md:px-12 py-4 border-b border-cyan-400/20 bg-black/40 flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <span className="kinetic-orb" />
+                <span className="text-xs uppercase tracking-[0.2em] text-cyan-200 font-bold">Subject Mastery Interface</span>
+              </div>
+              <div className="text-[11px] uppercase tracking-[0.18em] text-cyan-300/90">Synchronized pipeline ready</div>
+            </div>
+
+            <div className="flex-1 w-full flex flex-col overflow-y-auto p-6 md:p-12 scrollbar-thin scrollbar-thumb-red-900/50 scrollbar-track-transparent scanline-overlay">
               
               {appState === "input" && (
                 <form className="flex-1 flex flex-col lg:flex-row gap-8 lg:gap-10">
                   <div className="flex-[3] flex flex-col pr-0 lg:pr-6">
                     {/* File Uploads */}
+                    <div className="mb-3 text-xs font-bold uppercase tracking-[0.22em] text-cyan-300/90">Data Intake</div>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                       <div className="border-2 border-dashed border-gray-700 rounded-lg p-4 text-center hover:bg-red-900/20 hover:border-red-500/50 transition duration-300">
                         <label className="block text-sm font-medium text-gray-300 mb-2">Upload Syllabus</label>
@@ -206,7 +225,10 @@ const Home = () => {
                     <hr className="border-gray-800 my-6" />
 
                     {/* Exam Details */}
-                    <h3 className="text-lg font-semibold text-gray-100 mb-4">Exam Details</h3>
+                    <h3 className="text-lg font-semibold text-gray-100 mb-4 flex items-center gap-3">
+                      <span className="inline-block h-px w-8 bg-cyan-300/70"></span>
+                      Exam Details
+                    </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                       <div>
                         <label className="block text-sm font-medium text-gray-400">Subject Name</label>
@@ -239,7 +261,7 @@ const Home = () => {
                   </div>
 
                   {/* Right Column / Generation Buttons */}
-                  <div className="flex-[1] relative flex flex-col justify-center gap-4 pt-16 lg:pt-0 border-t lg:border-t-0 lg:border-l border-gray-800 lg:pl-10">
+                  <div className="flex-[1] relative flex flex-col justify-center gap-4 pt-16 lg:pt-0 border-t lg:border-t-0 lg:border-l border-cyan-500/20 lg:pl-10">
                     
                     {/* Floating Chat Button */}
                     <button 
@@ -308,6 +330,9 @@ const Home = () => {
                     )}
 
                     <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2 lg:text-left text-center">Generate</h3>
+                    <div className="text-[10px] uppercase tracking-[0.25em] text-cyan-300/80 border border-cyan-400/20 bg-cyan-400/5 px-3 py-2 mb-2">
+                      Neural Action Stack
+                    </div>
                     
                     <button onClick={handleScheduleClick} className="w-full px-4 py-3.5 rounded-md font-bold text-sm bg-gradient-to-r from-red-900/30 to-black border border-red-800/50 text-red-100 hover:from-red-900/50 hover:to-red-950/30 transition duration-300 shadow-[0_0_10px_rgba(220,38,38,0.1)]">
                       AI Study Schedule 
