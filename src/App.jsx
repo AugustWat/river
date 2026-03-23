@@ -1,7 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './Login';
-import Home from './Home';
+import Home from './home/Home';
 
 // 1. Create a wrapper component that checks auth dynamically
 const ProtectedRoute = ({ children }) => {

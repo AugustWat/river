@@ -31,7 +31,7 @@ const Footer = () => {
           <div className="flex flex-col space-y-4">
             <h3 className="text-gray-100 font-semibold uppercase tracking-wider text-sm">Project</h3>
             <p className="text-gray-400 text-sm">
-              App designed and developed by Pallab Mondal, Samrat and Timothy Utsab Bandyopadhyay to help out students in their exam preparation journey.
+              App designed and developed by Pallab Mondal, Samrat Mondal and Timothy Utsab Bandyopadhyay to help out students in their exam preparation journey.
             </p>
             <div className="flex space-x-4 pt-2">
               <a href="https://github.com/TheSam13" target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-white transition-colors duration-200" title="GitHub Profile">
