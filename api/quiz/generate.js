@@ -68,7 +68,6 @@ export default async function handler(req, res) {
 
     return sendJson(res, 200, { questions });
   } catch (error) {
-    console.error("Quiz Generation API Error:", error);
     const message = error instanceof Error ? error.message : "Unexpected server error";
     return sendJson(res, 500, { error: message });
   }

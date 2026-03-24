@@ -15,7 +15,7 @@
   ```bash
   npx vercel dev
   ```
-- **Logging context & Error Swallowing:** Context logs on the frontend (React component lifecycles) are in the browser DevTools. For anything running inside `api/`, check the CLI terminal window running `vercel dev`. **Crucial:** Vercel functions locally will often swallow exceptions if they are heavily `try/catch`ed for JSON responses but not explicitly logged. Always include `console.error("Context:", error);` inside catch blocks of API handlers to ensure stack traces appear in the CLI.
+- **Logging context:** Context logs on the frontend (React component lifecycles) are in the browser DevTools. For anything running inside `api/`, check the CLI terminal window running `vercel dev`.
 
 - **Environment Variables:** All secrets and provider-specific configs (e.g., `GEMINI_API_KEY`, `GEMINI_MODEL`) are stored in `.env` and accessed via `process.env`. Never hardcode these values in the codebase.
 

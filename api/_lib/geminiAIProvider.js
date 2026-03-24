@@ -77,6 +77,50 @@ const paperSchema = {
   propertyOrdering: ["title", "instructions", "sections"]
 };
 
+const scheduleSchema = {
+  type: SchemaType.OBJECT,
+  properties: {
+    title: {
+      type: SchemaType.STRING,
+      description: "Title of the study schedule"
+    },
+    instructions: {
+      type: SchemaType.STRING,
+      description: "Brief motivating instructions or overview"
+    },
+    schedule: {
+      type: SchemaType.ARRAY,
+      description: "Array of daily study plans",
+      items: {
+        type: SchemaType.OBJECT,
+        properties: {
+          day: {
+            type: SchemaType.NUMBER,
+            description: "The day number (1, 2, 3...)"
+          },
+          focus: {
+            type: SchemaType.STRING,
+            description: "The main topic or module focus for the day"
+          },
+          tasks: {
+            type: SchemaType.ARRAY,
+            description: "Actionable tasks to complete",
+            items: {
+              type: SchemaType.STRING
+            }
+          },
+          hours: {
+            type: SchemaType.STRING,
+            description: "Suggested time to spend (e.g., '2-3 hours')"
+          }
+        },
+        propertyOrdering: ["day", "focus", "tasks", "hours"]
+      }
+    }
+  },
+  propertyOrdering: ["title", "instructions", "schedule"]
+};
+
 
 // ==========================================
 // UTILITY FUNCTIONS
@@ -128,6 +172,26 @@ function buildPaperPrompt({ subject, degreeType, examType, semester, extraInstru
   }
 
   prompt += `Structure the paper realistically with appropriate sections (e.g., short answer, long answer/essay).
+    ${extraInstructions ? `Additional Instructions: ${extraInstructions}` : ""}
+    
+    Strictly output the response matching the provided JSON schema.`;
+
+  return prompt.trim();
+}
+
+function buildSchedulePrompt({ subject, days, degreeType, examType, semester, extraInstructions, hasFiles }) {
+  let prompt = `You are an expert AI study planner. Generate a highly effective ${days}-day study schedule for the following criteria:
+    - Subject: ${subject}
+    - Days to Prepare: ${days}
+    - Degree Type: ${degreeType}
+    - Semester: ${semester}
+    - Exam Type: ${examType}\n\n`;
+
+  if (hasFiles) {
+    prompt += `I have attached the syllabus and/or past year questions (PYQs) as reference files. Prioritize chapters and topics heavily weighted in these documents.\n\n`;
+  }
+
+  prompt += `Break the study plan into exactly ${days} daily schedules. Ensure the workload is progressive and includes revision days or mock test days if appropriate. Include realistic hours recommendations per day.
     ${extraInstructions ? `Additional Instructions: ${extraInstructions}` : ""}
     
     Strictly output the response matching the provided JSON schema.`;
@@ -242,5 +306,78 @@ export async function generatePredictionPaper(params) {
     return JSON.parse(text);
   } catch (err) {
     throw new Error("AI response was not valid JSON for the prediction paper.");
+  }
+}
+
+export async function generateChatResponse({ messages }) {
+  const apiKey = getRequiredEnv("GEMINI_API_KEY");
+  const modelName = process.env.GEMINI_MODEL || DEFAULT_MODEL;
+
+  const genAI = new GoogleGenerativeAI(apiKey);
+  
+  // Create model with system instruction
+  const model = genAI.getGenerativeModel({
+    model: modelName,
+    systemInstruction: "You are an AI Study Ally. Answer questions and be precise and to the point. Do not be overly chatty.",
+  });
+
+  // Map messages to Gemini format
+  const contents = messages.map(msg => ({
+    role: msg.role === 'ai' ? 'model' : 'user',
+    parts: [{ text: msg.content }]
+  }));
+
+  const result = await model.generateContent({ contents });
+  return result?.response?.text?.() || "";
+}
+
+export async function generateStudySchedule(params) {
+  const apiKey = getRequiredEnv("GEMINI_API_KEY");
+  const modelName = process.env.GEMINI_MODEL || DEFAULT_MODEL; 
+
+  const genAI = new GoogleGenerativeAI(apiKey);
+  const fileManager = new GoogleAIFileManager(apiKey);
+  
+  const model = genAI.getGenerativeModel({
+    model: modelName,
+    generationConfig: {
+      responseMimeType: "application/json",
+      responseSchema: scheduleSchema,
+    },
+  });
+
+  const fileParts = [];
+  if (params.files && params.files.length > 0) {
+    console.log(`Uploading ${params.files.length} files to Gemini for Schedule...`);
+    for (const file of params.files) {
+      const gFile = await uploadToGoogle(fileManager, file.filepath, file.mimetype || "application/pdf");
+      if (gFile) {
+        fileParts.push({
+          fileData: {
+            mimeType: gFile.mimeType,
+            fileUri: gFile.uri
+          }
+        });
+      }
+    }
+  }
+
+  const hasFiles = fileParts.length > 0;
+  const promptText = buildSchedulePrompt({ ...params, hasFiles });
+  
+  const aiPayload = [...fileParts, promptText];
+  console.log(`Generating ${params.days}-Day Schedule for:`, params.subject);
+  
+  const result = await model.generateContent(aiPayload);
+  const text = result?.response?.text?.() || "{}";
+
+  try {
+    const parsedData = JSON.parse(text);
+    if (!Array.isArray(parsedData.schedule)) {
+        throw new Error("Missing 'schedule' array");
+    }
+    return parsedData;
+  } catch (err) {
+    throw new Error("AI response was not valid JSON for the study schedule.");
   }
 }

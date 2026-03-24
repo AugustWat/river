@@ -121,8 +121,33 @@ const Home = () => {
         
         setGeneratedContent(data.paper);
 
+      } else if (type === "schedule") {
+        // --- REAL API CALL FOR STUDY SCHEDULE ---
+        const scheduleForm = new FormData();
+        scheduleForm.append("subject", formData.subject);
+        scheduleForm.append("daysToPrepare", formData.daysToPrepare);
+        scheduleForm.append("degreeType", formData.degreeType || "B.Tech");
+        scheduleForm.append("examType", formData.examType || "Mid Sem");
+        scheduleForm.append("semester", formData.semester || "1");
+        if (formData.extraInstructions) {
+          scheduleForm.append("extraInstructions", formData.extraInstructions);
+        }
+        if (formData.syllabus) scheduleForm.append("syllabus", formData.syllabus);
+        if (formData.pyq1) scheduleForm.append("pyq1", formData.pyq1);
+        if (formData.pyq2) scheduleForm.append("pyq2", formData.pyq2);
+
+        const response = await fetch("/api/schedule/generate", {
+          method: "POST",
+          body: scheduleForm, 
+        });
+
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "Failed to generate schedule");
+        
+        setGeneratedContent(data.scheduleContent);
+
       } else {
-        // --- TEMP MOCK DATA FOR QUIZ & SCHEDULE ---
+        // --- TEMP MOCK DATA FOR QUIZ ---
         await new Promise(resolve => setTimeout(resolve, 2500)); 
         
         if (type === "quiz") {
@@ -130,19 +155,7 @@ const Home = () => {
             { question: "Based on the uploaded syllabus, which data structure is best for LIFO?", options: ["Queue", "Linked List", "Stack", "Tree"], correctAnswer: 2 },
             { question: "What concept is tested most frequently in Section B?", options: ["Binary Search", "Dynamic Programming", "Graph Traversals", "Sorting Arrays"], correctAnswer: 1 },
           ]);
-        } else if (type === "schedule") {
-          const days = parseInt(formData.daysToPrepare, 10);
-          setGeneratedContent({
-            title: `${formData.subject || 'Subject'} - ${days}-Day AI Study Plan`,
-            instructions: "Follow this tailored timeline to maximize your retention.",
-            schedule: Array.from({ length: days }, (_, i) => ({
-              day: i + 1,
-              focus: `Module ${i + 1} Core Concepts`,
-              tasks: ["Read textbook chapters", "Watch recommended lectures", "Solve practice numericals"],
-              hours: "2-3 hours"
-            }))
-          });
-        }
+        } 
       }
 
       setAppState("output");
